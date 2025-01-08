@@ -32,6 +32,9 @@ class Post(models.Model):
     def __str__(self):
         return self.text[:30]
 
+    class Meta:
+        ordering = ['-pub_date']
+
 
 class Comment(models.Model):
     author = models.ForeignKey(
@@ -60,3 +63,18 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         related_name='following',
     )
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.following}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'following'],
+                name='unique_follow'
+            ),
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('following')),
+                name='prevent_self_follow'
+            )
+        ]
